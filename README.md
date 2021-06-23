@@ -1,6 +1,7 @@
 # React CRUD Application
 
 > React app that has a CRUD functionality and the states are stored and persisted in local storage
+, Local storage is implemented using a custom hook which is responsible storing and updating states 
 
 ## Usage
 
