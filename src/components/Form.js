@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UseLocalStorage from '../hook/UseLocalStorage';
 import ContactData from './ContactData';
 
+///toast-lib for alerts
 toast.configure();
+
 export default function Form() {
+	//contact-data
 	const [state, setState] = useState({
 		act: 0,
 		index: 0,
@@ -13,9 +16,14 @@ export default function Form() {
 		email: '',
 		phone: '',
 	});
+
+	//contact-array of Objects with custom hook 
 	const [datas, setData] = UseLocalStorage('users', []);
 
+	//ref for updating state//
+	const inputEl = useRef(null);
 
+	//state-changes//
 	const onChange = (e) => {
 		const name = e.target.name;
 		const value = e.target.value;
@@ -26,39 +34,58 @@ export default function Form() {
 		});
 	};
 
+	//form-submit//
 	const onSubmit = (e) => {
 		e.preventDefault();
 
-		const { name, email, phone } = state;
-		
-
-		if (name === '' || email === '' || phone === '') {
-			toast.error('Please enter all fields');
+		if (state.name === '' || state.email === '' || state.phone === '') {
+			toast.error('Please enter all fields', { autoClose: 3000 });
 		} else {
-			setData([...datas, state]);
+			let form = inputEl.current;
 
-			setState({
-				name: '',
-				email: '',
-				phone: '',
-			});
+			let dataArr = datas;
+			let name = form['name'].value;
+			let email = form['email'].value;
+			let phone = form['phone'].value;
+
+			if (state.act === 0) {
+				let data = {
+					name,
+					email,
+					phone,
+				};
+				dataArr.push(data);
+			} else {
+				let index = state.index;
+				dataArr[index].name = name;
+				dataArr[index].email = email;
+				dataArr[index].phone = phone;
+			}
+
+			setData([...dataArr]);
+			setState({ act: 0, name: '', email: '', phone: '' });
 		}
 	};
 
+	//form-edit///
 	const onEdit = (idx) => {
 		const editData = datas[idx];
 		console.log(editData);
+		const form = inputEl.current;
+		form['name'].value = editData.name;
+		form['email'].value = editData.email;
+		form['phone'].value = editData.phone;
 
 		setState({
-			...state,
 			act: 1,
 			index: idx,
-			name: editData.name,
-			email: editData.email,
-			phone: editData.phone,
 		});
+
+		console.log(state);
 	};
 
+
+	///form-delete///
 	const onDelete = (idx) => {
 		const dataArray = datas;
 		dataArray.splice(idx, 1);
@@ -66,18 +93,18 @@ export default function Form() {
 		setData([...dataArray]);
 	};
 
-	const onClear=()=>{
-		const clearall = window.localStorage.clear('users')
-
-		// setData([...clearall])
-	}
-	
-
+	///JSX//
 	return (
 		<div className='app'>
 			<div className='container'>
 				<h2>React CRUD Application</h2>
-				<form type='submit' onSubmit={onSubmit} className='form' id='form'>
+				<form
+					type='submit'
+					onSubmit={onSubmit}
+					className='form'
+					id='form'
+					ref={inputEl}
+				>
 					<div className='form-control'>
 						<label>Name</label>
 						<input
@@ -108,9 +135,10 @@ export default function Form() {
 
 					<button type='submit'>Submit </button>
 				</form>
-				<button onClick={onClear}>ClearAll </button>
 			</div>
-			{datas !== [] ? (
+
+			{/* conditionally render component */}
+			{datas != [] ? (
 				<div className='container__2'>
 					<ContactData datas={datas} onDelete={onDelete} onEdit={onEdit} />
 				</div>
